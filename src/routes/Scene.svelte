@@ -4,7 +4,7 @@
 	import Camera from './Camera.svelte';
 	import PartManager from './PartMananger.svelte';
 	import { interactivity } from '@threlte/extras';
-	import { parts } from './parts.svelte';
+	import { parts, deselectAll } from './parts.svelte';
 
 	interactivity();
 </script>
@@ -14,9 +14,7 @@
 <T.DirectionalLight position={[1, 2, 5]} />
 <Grid
 	ondblclick={() => {
-		for (var part of parts) {
-			part.active = false;
-		}
+		deselectAll(parts);
 	}}
 	position.y={-0.001}
 />

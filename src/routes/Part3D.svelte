@@ -1,17 +1,18 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import Self from './Part3D.svelte';
 	import { T } from '@threlte/core';
-	import { getMeshGeometry } from './parts.svelte';
 	import type { IntersectionEvent } from '@threlte/extras';
-	import { MeshStandardMaterial, CapsuleGeometry } from 'three';
+	import { CapsuleGeometry } from 'three';
 	import { interactivity } from '@threlte/extras';
-	import { Vector3, Euler } from 'three';
-	import { Joint } from './joints.svelte';
+	import { Vector3 } from 'three';
 	import { activeTool } from './global.svelte';
 	import { parts } from './parts.svelte';
 	import { Part } from './parts.svelte';
 	import * as THREE from 'three';
+	import { injectLookAtPlugin } from './lookAtPlugin';
 	interactivity();
+	injectLookAtPlugin();
 
 	let {
 		PartInstance,
@@ -25,15 +26,25 @@
 </script>
 
 <T.Group>
+	<!-- 
+		renders a singular part and its attached joints as a group
+		part onclick (top or bottom face) -> new joint
+		joint onclick -> part.subPart.push( new cylinder )
+		TODO: subPart should start at joint origin and look at e.face.normal
+	-->
 	<T.Mesh
 		bind:ref={meshRef}
 		position={PartInstance.position.toArray()}
-		geometry={getMeshGeometry(PartInstance.meshType)}
+		rotation={PartInstance.mesh.rotation.toArray()}
+		geometry={PartInstance.mesh.geometry}
+		object={PartInstance.mesh}
 		scale={PartInstance.scale.toArray()}
 		onclick={(e: IntersectionEvent<MouseEvent>) => {
+			console.log(parts);
+			e.stopPropagation();
 			if (!activeTool.addingJoint) {
 				PartInstance.active = true;
-				console.log(e.face?.normal);
+				console.log(PartInstance.position);
 			}
 			parts[0] = parts[0];
 			if (
@@ -42,40 +53,53 @@
 				PartInstance.meshType == 'cylinder'
 			) {
 				PartInstance.joints.push(
-					new Joint(
-						'sphere',
-						new Vector3(
-							0,
-							PartInstance.position.y + (e.face?.normal.y ?? 0) * PartInstance.scale.y,
-							0
-						)
-					)
+					new Part('sphere', new Vector3(0, 3.25, 0), new THREE.Quaternion(), new Vector3())
 				);
 			}
 		}}
-		lookAt={PartInstance.normal}
 	>
-		<T.MeshStandardMaterial wireframe={true} />
+		<T.MeshStandardMaterial wireframe={false} />
 		{#if PartInstance.joints.length > 0}
 			{#each PartInstance.joints as joint}
+				<!-- rendering the joints 
+				 TODO: in the onclick, bug is setting the subPart position to the parents origin 
+				maybe forego the subParts array and just push to parts?
+				-->
 				<T.Mesh
 					position={joint.position.toArray()}
-					geometry={new CapsuleGeometry(0.3, 0.1, 2, 8)}
-					scale={PartInstance.scale.toArray()}
-					material={new MeshStandardMaterial()}
+					geometry={new CapsuleGeometry(0.5, 0.25, 1, 6)}
+					scale={0.5}
 					onclick={(e: IntersectionEvent<MouseEvent>) => {
-						const faceNormal = e.face?.normal;
-						PartInstance.subParts.push(
-							new Part(
-								'cylinder',
-								joint.position,
-								new Euler(1, 1, 1),
-								new Vector3(1, 1, 1),
-								faceNormal
-							)
-						);
+						e.stopPropagation();
+						let faceNormal = e.intersections[0].face?.normal;
+						if (faceNormal) {
+							if (faceNormal.y > 0.9) {
+								faceNormal = new Vector3(0, 1, 0);
+							} else if (faceNormal.y < -0.9) {
+								faceNormal = undefined;
+							}
+							const upVector = PartInstance.normal;
+							const quaternion = new THREE.Quaternion().setFromUnitVectors(upVector, faceNormal);
+							PartInstance.subParts.push(
+								new Part(
+									'cylinder',
+									joint.position.clone(),
+									quaternion,
+									new Vector3(1, 1, 1),
+									faceNormal
+								)
+							);
+							PartInstance.subParts.slice(-1)[0].applyRotation(faceNormal);
+						}
 					}}
-				></T.Mesh>
+				>
+					<T.MeshStandardMaterial wirefame={true} />
+				</T.Mesh>
+			{/each}
+		{/if}
+		{#if PartInstance.subParts.length > 0}
+			{#each PartInstance.subParts as subPart}
+				<Self PartInstance={subPart} />
 			{/each}
 		{/if}
 		{#if children && meshRef}
