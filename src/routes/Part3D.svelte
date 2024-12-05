@@ -3,7 +3,6 @@
 	import Self from './Part3D.svelte';
 	import { T } from '@threlte/core';
 	import type { IntersectionEvent } from '@threlte/extras';
-	import { CapsuleGeometry } from 'three';
 	import { interactivity } from '@threlte/extras';
 	import { Vector3 } from 'three';
 	import { activeTool } from './global.svelte';
@@ -22,7 +21,7 @@
 		children?: Snippet<[{ ref: THREE.Mesh }]>;
 	} = $props();
 
-	let meshRef: THREE.Mesh | undefined = $state(undefined);
+	let meshRef: THREE.Mesh | undefined = $state(PartInstance.mesh);
 </script>
 
 <T.Group>
@@ -53,12 +52,12 @@
 				PartInstance.meshType == 'cylinder'
 			) {
 				PartInstance.joints.push(
-					new Part('sphere', new Vector3(0, 3.25, 0), new THREE.Quaternion(), new Vector3())
+					new Part('sphere', new Vector3(0, 4, 0), new THREE.Quaternion(), new Vector3())
 				);
 			}
 		}}
 	>
-		<T.MeshStandardMaterial wireframe={false} />
+		<T.MeshStandardMaterial wireframe={false} color={0xf8dfa1} />
 		{#if PartInstance.joints.length > 0}
 			{#each PartInstance.joints as joint}
 				<!-- rendering the joints 
@@ -67,8 +66,14 @@
 				-->
 				<T.Mesh
 					position={joint.position.toArray()}
-					geometry={new CapsuleGeometry(0.5, 0.25, 1, 6)}
-					scale={0.5}
+					geometry={joint.mesh.geometry}
+					scale={1}
+					oncreate={() => {
+						// Create a quaternion that represents world up orientation
+						const worldUpQuaternion = new THREE.Quaternion();
+						worldUpQuaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), 360);
+						joint.mesh.quaternion.copy(worldUpQuaternion);
+					}}
 					onclick={(e: IntersectionEvent<MouseEvent>) => {
 						e.stopPropagation();
 						let faceNormal = e.intersections[0].face?.normal;
@@ -93,7 +98,7 @@
 						}
 					}}
 				>
-					<T.MeshStandardMaterial wirefame={true} />
+					<T.MeshMatcapMaterial flatShading={true} wirefame={true} />
 				</T.Mesh>
 			{/each}
 		{/if}

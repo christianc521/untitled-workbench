@@ -3,7 +3,7 @@ import {
 	Quaternion,
 	BoxGeometry,
 	CylinderGeometry,
-	CapsuleGeometry,
+	SphereGeometry,
 } from "three";
 
 import * as THREE from 'three';
@@ -40,7 +40,7 @@ export class Part {
 		this.#joints = [];
 		this.normal = normal;
 		this.#subParts = [];
-		this.mesh = new THREE.Mesh(getMeshGeometry(meshType), new THREE.MeshStandardMaterial())
+		this.mesh = new THREE.Mesh(getMeshGeometry(meshType), new THREE.MeshStandardMaterial({ color: 0xf8dfa1 }))
 	}
 
 	get position() {
@@ -80,7 +80,7 @@ export class Part {
 		const upVector = new THREE.Vector3(0, 1, 0);
 		const quaternion = new THREE.Quaternion().setFromUnitVectors(upVector, targetNormal);
 		this.mesh.quaternion.copy(quaternion);
-		this.mesh.geometry.translate(0, 1.5, 0);
+		this.mesh.geometry.translate(0, 0.5, 0);
 	}
 
 }
@@ -94,10 +94,9 @@ export function getMeshGeometry(type: string) {
 		case "box":
 			return new BoxGeometry(1, 1, 1);
 		case "cylinder":
-			return (new CylinderGeometry(0.5, 0.5, 3)
-			);
+			return (new CylinderGeometry(0.5, 0.5, 3).translate(0, 1.5, 0));
 		case "sphere":
-			return new CapsuleGeometry(0.3, 0.1, 2, 8);
+			return new SphereGeometry(0.5, 8, 5).rotateY(360);
 		default:
 			return new BoxGeometry(1, 1, 1);
 	}
