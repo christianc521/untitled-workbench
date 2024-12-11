@@ -2,11 +2,12 @@
 	import { T } from '@threlte/core';
 	import { Grid } from '@threlte/extras';
 	import Camera from './Camera.svelte';
-	import PartManager from './PartMananger.svelte';
+	import Part3D from './Part3D.svelte';
 	import { interactivity } from '@threlte/extras';
-	import { parts, deselectAll } from './parts.svelte';
+	import { deselectAll, rootGroups } from './parts.svelte';
 
 	interactivity();
+	$inspect(rootGroups);
 </script>
 
 <Camera />
@@ -14,8 +15,8 @@
 <T.DirectionalLight position={[1, 2, 5]} />
 <Grid
 	ondblclick={() => {
-		deselectAll(parts);
+		deselectAll();
 	}}
 	position.y={-0.001}
 />
-<PartManager />
+<Part3D />

@@ -1,1 +1,1 @@
-export const activeTool = $state({ addingJoint: false });
+export const globalStates = $state({ addingJoint: false });
