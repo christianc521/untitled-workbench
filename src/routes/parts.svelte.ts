@@ -6,25 +6,32 @@ import {
 } from "three";
 import * as THREE from 'three';
 
-export let rootGroups: THREE.Group[] = $state([])
-$effect(() => {
-	rootGroups = rootGroups;
-})
+export interface rootGroup {
+	group: THREE.Group;
+	parent: THREE.Mesh;
+	children: Array<THREE.Mesh>;
+}
+export const rootGroups = $state<rootGroup[]>([])
 
 export function createRootObject(geometryInstance: THREE.BufferGeometry, materialInstance: THREE.Material) {
-	const meshInstance: THREE.Mesh = $state(new THREE.Mesh(geometryInstance, materialInstance));
+	const meshInstance: THREE.Mesh = new THREE.Mesh(geometryInstance, materialInstance);
 
-	const rootInstance: THREE.Group = $state(new THREE.Group());
+	const rootInstance: THREE.Group = new THREE.Group();
 	rootInstance.userData = {
 		active: 'true'
 	}
 	rootInstance.add(meshInstance);
-	rootGroups.push(rootInstance);
+	const newGroup = {
+		group: rootInstance,
+		parent: meshInstance,
+		children: [meshInstance]
+	}
+	rootGroups.push(newGroup);
 }
 
-export function createChildObject(parentObject: THREE.Group, geometryInstance: THREE.BufferGeometry, materialInstance: THREE.Material) {
+export function createChildObject(rootGroupIndex: number, geometryInstance: THREE.BufferGeometry, materialInstance: THREE.Material) {
 	const childInstance: THREE.Mesh = new THREE.Mesh(geometryInstance, materialInstance);
-	parentObject.attach(childInstance);
+	rootGroups[rootGroupIndex].children.push(childInstance);
 }
 
 export function editScale(meshInstance: THREE.Mesh, newScale: number, axis: string) {
@@ -66,7 +73,7 @@ export function getMeshGeometry(type: string) {
 
 
 export function deselectAll() {
-	for (const rootInstance of rootGroups) {
+	for (const rootInstance of rootGroups.root) {
 		rootInstance.userData.active = false;
 	}
 }

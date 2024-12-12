@@ -12,7 +12,7 @@
 </script>
 
 {#each rootGroups as parentObject, parentIndex}
-	{#if parentObject instanceof THREE.Group}
+	{#if parentObject.group instanceof THREE.Group}
 		{#each parentObject.children as child (child.uuid)}
 			{#if child instanceof THREE.Mesh}
 				<T
@@ -23,21 +23,19 @@
 					onclick={(e: IntersectionEvent<MouseEvent>) => {
 						e.stopPropagation();
 						if (e.intersections) {
-							let parentInstance = rootGroups[parentIndex];
 							createChildObject(
-								parentInstance,
+								parentIndex,
 								getMeshGeometry('sphere'),
 								new THREE.MeshStandardMaterial()
 							);
+							rootGroups[parentIndex].group.userData.active = true;
 
-							parentInstance.userData.active = true;
-							rootGroups[parentIndex] = parentInstance;
-							console.log('intersection: ', e.intersections);
+							console.log(rootGroups);
 						}
 					}}
 				>
-					{#if parentObject.userData.active == true && globalStates.addingJoint == false}
-						<TransformControls translationSnap={1} group={parentObject} />
+					{#if parentObject.group.userData.active == true && globalStates.addingJoint == false}
+						<TransformControls translationSnap={1} group={parentObject.group} />
 					{/if}
 				</T>
 			{/if}
