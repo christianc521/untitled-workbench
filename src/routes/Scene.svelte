@@ -4,7 +4,8 @@
 	import Camera from './Camera.svelte';
 	import Part3D from './Part3D.svelte';
 	import { interactivity } from '@threlte/extras';
-	import { deselectAll, rootGroups } from './parts.svelte';
+	import { rootGroups } from './parts.svelte';
+	import { globalStates } from './global.svelte';
 
 	interactivity();
 	$inspect(rootGroups);
@@ -15,7 +16,7 @@
 <T.DirectionalLight position={[1, 2, 5]} />
 <Grid
 	ondblclick={() => {
-		deselectAll();
+		globalStates.selectedGroup = undefined;
 	}}
 	position.y={-0.001}
 />

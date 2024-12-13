@@ -4,7 +4,7 @@
 	import { interactivity, TransformControls } from '@threlte/extras';
 	import * as THREE from 'three';
 	import { injectLookAtPlugin } from './lookAtPlugin';
-	import { createChildObject, getMeshGeometry, rootGroups } from './parts.svelte';
+	import { rootGroups, handleOnClick } from './parts.svelte';
 	import { globalStates } from './global.svelte';
 	interactivity();
 	injectLookAtPlugin();
@@ -13,32 +13,30 @@
 
 {#each rootGroups as parentObject, parentIndex}
 	{#if parentObject.group instanceof THREE.Group}
-		{#each parentObject.children as child (child.uuid)}
-			{#if child instanceof THREE.Mesh}
-				<T
-					is={THREE.Mesh}
-					geometry={child.geometry}
-					material={child.material}
-					position={child.position.toArray()}
-					onclick={(e: IntersectionEvent<MouseEvent>) => {
-						e.stopPropagation();
-						if (e.intersections) {
-							createChildObject(
-								parentIndex,
-								getMeshGeometry('sphere'),
-								new THREE.MeshStandardMaterial()
-							);
-							rootGroups[parentIndex].group.userData.active = true;
+		<T is={rootGroups[parentIndex].group}>
+			{#each parentObject.children as child, childIndex}
+				{#if child instanceof THREE.Mesh}
+					<T
+						is={child}
+						geometry={child.geometry}
+						material={child.material}
+						position={child.position.toArray()}
+						onclick={(e: IntersectionEvent<MouseEvent>) => {
+							e.stopPropagation();
 
-							console.log(rootGroups);
-						}
-					}}
-				>
-					{#if parentObject.group.userData.active == true && globalStates.addingJoint == false}
-						<TransformControls translationSnap={1} group={parentObject.group} />
-					{/if}
-				</T>
-			{/if}
-		{/each}
+							if (e.intersections && globalStates.addingJoint) {
+								handleOnClick(childIndex, parentIndex, e.intersections[0]);
+								console.log('added: ', rootGroups[parentIndex].children.slice(-1)[0]);
+							} else {
+								globalStates.selectedGroup = rootGroups[parentIndex].group;
+							}
+						}}
+					></T>
+				{/if}
+			{/each}
+		</T>
 	{/if}
 {/each}
+{#if globalStates.selectedGroup instanceof THREE.Group && globalStates.addingJoint == false}
+	<TransformControls object={globalStates.selectedGroup} />
+{/if}
