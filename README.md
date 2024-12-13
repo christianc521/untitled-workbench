@@ -2,5 +2,6 @@
 
 This project is currently under development, check back for updates!
 
-![image](https://github.com/user-attachments/assets/15442cc9-967c-4362-a0de-6fb9c554bee9)
+![MacBook Pro 14_ - 1](https://github.com/user-attachments/assets/f3e13633-af61-4143-aabe-a8b0e6e03924)
+
 
