@@ -18,9 +18,6 @@
 				{#if child instanceof THREE.Mesh}
 					<T
 						is={child}
-						geometry={child.geometry}
-						material={child.material}
-						position={child.position.toArray()}
 						onclick={(e: IntersectionEvent<MouseEvent>) => {
 							e.stopPropagation();
 
@@ -29,6 +26,7 @@
 								console.log('added: ', rootGroups[parentIndex].children.slice(-1)[0]);
 							} else {
 								globalStates.selectedGroup = rootGroups[parentIndex].group;
+								globalStates.rootGroupIndex = parentIndex;
 							}
 						}}
 					></T>
@@ -38,5 +36,9 @@
 	{/if}
 {/each}
 {#if globalStates.selectedGroup instanceof THREE.Group && globalStates.addingJoint == false}
-	<TransformControls object={globalStates.selectedGroup} />
+	<TransformControls
+		object={rootGroups[globalStates.rootGroupIndex].group}
+		mode="translate"
+		translationSnap={1}
+	/>
 {/if}
